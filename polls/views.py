@@ -1,5 +1,6 @@
 #from django.shortcuts import render
 
+from datetime import timezone
 from typing import ContextManager
 from django import template
 from django.http import HttpResponse, response, Http404, HttpResponseRedirect
@@ -17,12 +18,20 @@ class IndexView(generic.ListView):
     context_object_name= 'latest_question_list'  
 
     def get_queryset(self):
-        #return the last 5 question if you wnat can change the number of question to charge
+        #return the last 5 question if you want can change the number of question to charge
         return Question.objects.order_by('-pub_date')[:5]
+    
+
 
 class DetailView(generic.DetailView):
     model= Question
     template_name='polls/detail.html'
+
+    def get_queryset(self):
+        """
+        Excludes any questions that aren't published yet
+        """
+        return Question.objects.filter(pub_date__lte=timezone.now())
 
 class ResultsView(generic.DetailView):
     model=Question
@@ -77,3 +86,7 @@ def vote(request, question_id):
     return HttpResponseRedirect(reverse('polls:results',args=(question.id,)))#HttpResponse("You're voting on question %s." % question_id)
    
 
+def get_queryset(self):
+    """return the last five published questions (not including those set
+    tobe published in the future)."""
+    return Question.objects.filter(pub_date_lte=timezone.now()).order_by('-pub_date')[:5]
